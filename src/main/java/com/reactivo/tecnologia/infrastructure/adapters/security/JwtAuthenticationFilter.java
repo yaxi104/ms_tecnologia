@@ -1,7 +1,6 @@
 package com.reactivo.tecnologia.infrastructure.adapters.security;
 
 import com.reactivo.tecnologia.domain.api.JwtServicePort;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,10 +17,14 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter implements WebFilter {
 
     private final JwtServicePort jwtService;
+
+
+    public JwtAuthenticationFilter(JwtServicePort jwtServicePort) {
+        this.jwtService = jwtServicePort;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

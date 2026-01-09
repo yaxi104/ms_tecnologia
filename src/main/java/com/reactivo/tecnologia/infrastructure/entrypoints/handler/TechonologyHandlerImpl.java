@@ -5,15 +5,19 @@ import com.reactivo.tecnologia.domain.enums.TechnicalMessage;
 import com.reactivo.tecnologia.domain.exceptions.BusinessException;
 import com.reactivo.tecnologia.domain.exceptions.TechnicalException;
 import com.reactivo.tecnologia.infrastructure.entrypoints.dto.request.TechnologyDTO;
+import com.reactivo.tecnologia.infrastructure.entrypoints.dto.response.TechnologyResponse;
 import com.reactivo.tecnologia.infrastructure.entrypoints.mapper.TechnologyMapper;
+import com.reactivo.tecnologia.infrastructure.entrypoints.mapper.TechnologyResponseMapper;
 import com.reactivo.tecnologia.infrastructure.entrypoints.util.APIResponse;
 import com.reactivo.tecnologia.infrastructure.entrypoints.util.ErrorDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
@@ -30,6 +34,7 @@ public class TechonologyHandlerImpl {
 
     private final TechnologyServicePort technologyServicePort;
     private final TechnologyMapper technologyMapper;
+    private final TechnologyResponseMapper technologyResponseMapper;
 
     public Mono<ServerResponse> createTechnology(ServerRequest request) {
         String messageId = getMessageId(request);
@@ -72,6 +77,29 @@ public class TechonologyHandlerImpl {
                                     .build()));
                 });
     }
+
+    public Mono<ServerResponse> getAllTechnologies(ServerRequest request) {
+        String messageId = getMessageId(request);
+
+        Flux<TechnologyResponse> dtoFlux = technologyServicePort.findAll()
+                .map(technologyResponseMapper::toDto);
+
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(dtoFlux, TechnologyResponse.class)
+                .contextWrite(Context.of(X_MESSAGE_ID, messageId))
+                .doOnError(ex -> log.error("Error fetching technologies for messageId: {}", messageId, ex))
+                .onErrorResume(ex -> buildErrorResponse(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        messageId,
+                        TechnicalMessage.INTERNAL_ERROR,
+                        List.of(ErrorDTO.builder()
+                                .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                .build())
+                ));
+    }
+
 
     private Mono<ServerResponse> buildErrorResponse(HttpStatus httpStatus, String identifier, TechnicalMessage error,
                                                     List<ErrorDTO> errors) {

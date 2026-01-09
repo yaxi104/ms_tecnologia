@@ -3,18 +3,26 @@ package com.reactivo.tecnologia.domain.usecase;
 import com.reactivo.tecnologia.domain.enums.TechnicalMessage;
 import com.reactivo.tecnologia.domain.exceptions.BusinessException;
 import com.reactivo.tecnologia.domain.model.Technology;
+import com.reactivo.tecnologia.domain.model.TechnologySummary;
 import com.reactivo.tecnologia.domain.spi.TechnologyPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -76,11 +84,13 @@ class TechnologyUseCaseTest {
     }
 
 
-    @Test
-    void saveTechnologyNameIsInvalidTest() {
-        Technology invalidName = new Technology(null, "", "Valid description");
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource( strings = {"", " ", "Este Es Un Nombre De Tecnologia Que Supera Cincuenta Caracteres."})
+    void saveTechnologyNameIsInvalidTest(String arg) {
+        Technology invalidName = new Technology(null, arg, "Valid description");
 
-        when(technologyPersistencePort.existByName(anyString())).thenReturn(Mono.just(false));
+        lenient().when(technologyPersistencePort.existByName(any())).thenReturn(Mono.just(false));
 
         StepVerifier.create(technologyUseCase.saveTechnology(invalidName))
                 .expectErrorMatches(err ->
@@ -92,9 +102,11 @@ class TechnologyUseCaseTest {
         verify(technologyPersistencePort, never()).save(any());
     }
 
-    @Test
-    void saveTechnologyDescriptionIsInvalidTest() {
-        Technology invalidDescription = new Technology(null, "Valid Name", "");
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource( strings = {"", " ", "Esta es una descripción de prueba que supera los noventa caracteres para testear la validación de longitud."})
+    void saveTechnologyDescriptionIsInvalidTest(String arg) {
+        Technology invalidDescription = new Technology(null, "Valid Name", arg);
 
         when(technologyPersistencePort.existByName(anyString())).thenReturn(Mono.just(false));
 
@@ -106,5 +118,63 @@ class TechnologyUseCaseTest {
                 .verify();
 
         verify(technologyPersistencePort, never()).save(any());
+    }
+
+    @Test
+    void findAllReturnsTechnologiesTest() {
+        Technology tech1 = new Technology(1L, "Spring WebFlux", "Reactive framework");
+        Technology tech2 = new Technology(2L, "React", "Frontend library");
+
+        when(technologyPersistencePort.findAll())
+                .thenReturn(Flux.just(tech1, tech2));
+
+        StepVerifier.create(technologyUseCase.findAll())
+                .expectNext(tech1)
+                .expectNext(tech2)
+                .verifyComplete();
+
+        verify(technologyPersistencePort).findAll();
+    }
+
+    @Test
+    void findAllEmptyTest() {
+        when(technologyPersistencePort.findAll())
+                .thenReturn(Flux.empty());
+
+        StepVerifier.create(technologyUseCase.findAll())
+                .verifyComplete();
+
+        verify(technologyPersistencePort).findAll();
+    }
+
+    @Test
+    void findByIdsReturnsSummariesTest() {
+        TechnologySummary summary1 = new TechnologySummary(1L, "Spring WebFlux");
+        TechnologySummary summary2 = new TechnologySummary(2L, "React");
+
+        List<Long> ids = List.of(1L, 2L);
+
+        when(technologyPersistencePort.findByIds(ids))
+                .thenReturn(Flux.just(summary1, summary2));
+
+        StepVerifier.create(technologyUseCase.findByIds(ids))
+                .expectNext(summary1)
+                .expectNext(summary2)
+                .verifyComplete();
+
+        verify(technologyPersistencePort).findByIds(ids);
+    }
+
+    @Test
+    void findByIdsEmptyTest() {
+        List<Long> ids = List.of(10L, 20L);
+
+        when(technologyPersistencePort.findByIds(ids))
+                .thenReturn(Flux.empty());
+
+        StepVerifier.create(technologyUseCase.findByIds(ids))
+                .verifyComplete();
+
+        verify(technologyPersistencePort).findByIds(ids);
     }
 }

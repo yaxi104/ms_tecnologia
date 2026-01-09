@@ -4,9 +4,13 @@ import com.reactivo.tecnologia.domain.api.TechnologyServicePort;
 import com.reactivo.tecnologia.domain.enums.TechnicalMessage;
 import com.reactivo.tecnologia.domain.exceptions.BusinessException;
 import com.reactivo.tecnologia.domain.model.Technology;
+import com.reactivo.tecnologia.domain.model.TechnologySummary;
 import com.reactivo.tecnologia.domain.spi.TechnologyPersistencePort;
 import com.reactivo.tecnologia.domain.utils.ValidationHelper;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 public class TechnologyUseCase implements TechnologyServicePort {
 
@@ -28,4 +32,15 @@ public class TechnologyUseCase implements TechnologyServicePort {
                         : technologyPersistencePort.save(technology)
                 );
     }
+
+    @Override
+    public Flux<Technology> findAll() {
+        return technologyPersistencePort.findAll();
+    }
+
+    @Override
+    public Flux<TechnologySummary> findByIds(List<Long> ids) {
+        return technologyPersistencePort.findByIds(ids);
+    }
+
 }

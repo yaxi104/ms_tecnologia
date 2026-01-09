@@ -5,6 +5,7 @@ import com.reactivo.tecnologia.domain.spi.TechnologyPersistencePort;
 import com.reactivo.tecnologia.domain.usecase.TechnologyUseCase;
 import com.reactivo.tecnologia.infrastructure.adapters.persistence.technology.TechnologyPersistenceAdapter;
 import com.reactivo.tecnologia.infrastructure.adapters.persistence.technology.mapper.TechnologyEntityMapper;
+import com.reactivo.tecnologia.infrastructure.adapters.persistence.technology.mapper.TechnologySummaryEntityMapper;
 import com.reactivo.tecnologia.infrastructure.adapters.persistence.technology.repository.TechnologyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -15,10 +16,11 @@ import org.springframework.context.annotation.Configuration;
 public class UseCasesConfig {
     private final TechnologyRepository technologyRepository;
     private final TechnologyEntityMapper technologyEntityMapper;
+    private final TechnologySummaryEntityMapper technologySummaryEntityMapper;
 
     @Bean
     public TechnologyPersistencePort technologyPersistencePort() {
-        return new TechnologyPersistenceAdapter(technologyRepository, technologyEntityMapper);
+        return new TechnologyPersistenceAdapter(technologyRepository, technologyEntityMapper, technologySummaryEntityMapper);
     }
 
     @Bean
