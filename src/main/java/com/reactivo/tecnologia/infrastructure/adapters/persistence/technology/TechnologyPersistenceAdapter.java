@@ -37,6 +37,7 @@ public class TechnologyPersistenceAdapter implements TechnologyPersistencePort {
 
     @Override
     public Flux<TechnologySummary> findByIds(List<Long> ids) {
+        if (ids.isEmpty()) return Flux.empty();
         return technologyRepository.findSummariesByIds(ids)
                 .map(technologySummaryEntityMapper::toModel);
     }

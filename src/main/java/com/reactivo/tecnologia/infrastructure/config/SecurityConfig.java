@@ -10,6 +10,8 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import static com.reactivo.tecnologia.infrastructure.entrypoints.util.Constants.USER_ADMIN;
+
 @EnableWebFluxSecurity
 @Configuration
 @RequiredArgsConstructor
@@ -24,8 +26,10 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/public/**").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/tecnologia").hasRole("ADMIN")
-                        .pathMatchers(HttpMethod.GET, "/tecnologias").hasRole("ADMIN")
+                        .pathMatchers(HttpMethod.POST, "/tecnologia").hasRole(USER_ADMIN)
+                        .pathMatchers(HttpMethod.GET, "/tecnologias").hasRole(USER_ADMIN)
+                        .pathMatchers(HttpMethod.POST, "/capacidad-tecnologia").hasRole(USER_ADMIN)
+                        .pathMatchers(HttpMethod.GET, "/capacidad-tecnologias").hasRole(USER_ADMIN)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)

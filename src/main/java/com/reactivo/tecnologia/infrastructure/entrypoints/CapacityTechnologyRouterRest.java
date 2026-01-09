@@ -1,6 +1,6 @@
 package com.reactivo.tecnologia.infrastructure.entrypoints;
 
-import com.reactivo.tecnologia.infrastructure.entrypoints.handler.TechonologyHandlerImpl;
+import com.reactivo.tecnologia.infrastructure.entrypoints.handler.CapacityTechnologyHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -13,12 +13,12 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 
 @Configuration
-public class TechnologyRouterRest {
+public class CapacityTechnologyRouterRest {
 
-    @Bean("technologyRouter")
-    public RouterFunction<ServerResponse> routerFunction(TechonologyHandlerImpl techonologyHandler) {
+    @Bean("capacityTechnologyRouter")
+    public RouterFunction<ServerResponse> routerFunction(CapacityTechnologyHandler capacityTechnologyHandler) {
         return RouterFunctions
-                .route(POST("/tecnologia").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::createTechnology)
-                .andRoute(GET("/tecnologias").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::getAllTechnologies);
+                .route(POST("/capacidad-tecnologia").and(accept(MediaType.APPLICATION_JSON)), capacityTechnologyHandler::saveAllCapacityTechnology)
+                .andRoute(GET("/capacidad-tecnologias").and(accept(MediaType.APPLICATION_JSON)), capacityTechnologyHandler::findAllIdTechnologyByIdCapacity);
     }
 }
