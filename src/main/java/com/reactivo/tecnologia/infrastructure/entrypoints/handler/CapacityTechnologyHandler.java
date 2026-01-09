@@ -3,6 +3,9 @@ package com.reactivo.tecnologia.infrastructure.entrypoints.handler;
 import com.reactivo.tecnologia.domain.api.CapacityTechnologyServicePort;
 import com.reactivo.tecnologia.domain.enums.TechnicalMessage;
 import com.reactivo.tecnologia.domain.model.CapacityTechnology;
+import com.reactivo.tecnologia.infrastructure.entrypoints.dto.request.CapacityTechnologyDTO;
+import com.reactivo.tecnologia.infrastructure.entrypoints.mapper.CapacityTechnologyMapper;
+import com.reactivo.tecnologia.infrastructure.entrypoints.util.ContextKeys;
 import com.reactivo.tecnologia.infrastructure.entrypoints.util.ErrorDTO;
 import com.reactivo.tecnologia.infrastructure.entrypoints.util.HandlerUtils;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +17,9 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.context.Context;
 
 import java.util.List;
-
-import static com.reactivo.tecnologia.infrastructure.entrypoints.util.Constants.X_MESSAGE_ID;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -26,50 +27,84 @@ import static com.reactivo.tecnologia.infrastructure.entrypoints.util.Constants.
 public class CapacityTechnologyHandler {
 
     private final CapacityTechnologyServicePort capacityTechnologyUseCase;
+    private final CapacityTechnologyMapper mapper;
     private final HandlerUtils handlerUtils;
 
     public Mono<ServerResponse> saveAllCapacityTechnology(ServerRequest request) {
+
         String messageId = handlerUtils.getMessageId(request);
+        if (messageId == null) {
+            return handlerUtils.buildErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    TechnicalMessage.INVALID_PARAMETERS,
+                    List.of(ErrorDTO.builder()
+                            .code(TechnicalMessage.INVALID_PARAMETERS.getCode())
+                            .message("Header X-MESSAGE-ID is required")
+                            .build()));
+        }
 
-        Flux<CapacityTechnology> capacityTechFlux = request.bodyToFlux(CapacityTechnology.class);
+        Flux<CapacityTechnology> capacityFlux =
+                request.bodyToFlux(CapacityTechnologyDTO.class)
+                        .map(mapper::toModel)
+                        .filter(Objects::nonNull);
 
-        return capacityTechnologyUseCase.saveAllCapacityTechnology(capacityTechFlux)
+        return capacityTechnologyUseCase.saveAllCapacityTechnology(capacityFlux)
                 .collectList()
-                .flatMap(list -> ServerResponse.status(HttpStatus.CREATED)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(list))
-                .contextWrite(Context.of(X_MESSAGE_ID, messageId))
-                .doOnError(ex -> log.error("Error saving capacity technologies for messageId: {}", messageId, ex))
-                .onErrorResume(ex -> handlerUtils.buildErrorResponse(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        messageId,
-                        TechnicalMessage.INTERNAL_ERROR,
-                        List.of(ErrorDTO.builder()
-                                .code(TechnicalMessage.INTERNAL_ERROR.getCode())
-                                .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
-                                .build())));
+                .flatMap(list ->
+                        ServerResponse.status(HttpStatus.CREATED)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(list))
+                .contextWrite(ctx -> ctx.put(ContextKeys.X_MESSAGE_ID, messageId))
+                .doOnSuccess(v ->
+                        log.info("CapacityTechnology saved successfully. messageId={}", messageId))
+                .doOnError(ex ->
+                        log.error("Error saving CapacityTechnology. messageId={}", messageId, ex))
+                .onErrorResume(ex ->
+                        handlerUtils.buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                messageId,
+                                TechnicalMessage.INTERNAL_ERROR,
+                                List.of(ErrorDTO.builder()
+                                        .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                        .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                        .build())));
     }
 
-
     public Mono<ServerResponse> findAllIdTechnologyByIdCapacity(ServerRequest request) {
+
         String messageId = handlerUtils.getMessageId(request);
+        if (messageId == null) {
+            return handlerUtils.buildErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    TechnicalMessage.INVALID_PARAMETERS,
+                    List.of(ErrorDTO.builder()
+                            .code(TechnicalMessage.INVALID_PARAMETERS.getCode())
+                            .message("Header X-MESSAGE-ID is required")
+                            .build()));
+        }
+
         Long idCapacity = Long.valueOf(request.pathVariable("idCapacity"));
 
         return capacityTechnologyUseCase.findAllIdTechnologyByIdCapacity(idCapacity)
                 .collectList()
-                .flatMap(list -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(list))
-                .contextWrite(Context.of(X_MESSAGE_ID, messageId))
-                .doOnError(ex -> log.error("Error fetching technology IDs for capacity {} messageId: {}", idCapacity, messageId, ex))
-                .onErrorResume(ex -> handlerUtils.buildErrorResponse(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        messageId,
-                        TechnicalMessage.INTERNAL_ERROR,
-                        List.of(ErrorDTO.builder()
-                                .code(TechnicalMessage.INTERNAL_ERROR.getCode())
-                                .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
-                                .build())));
+                .flatMap(list ->
+                        ServerResponse.ok()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(list))
+                .contextWrite(ctx -> ctx.put(ContextKeys.X_MESSAGE_ID, messageId))
+                .doOnError(ex ->
+                        log.error("Error fetching technologies. capacityId={} messageId={}",
+                                idCapacity, messageId, ex))
+                .onErrorResume(ex ->
+                        handlerUtils.buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                messageId,
+                                TechnicalMessage.INTERNAL_ERROR,
+                                List.of(ErrorDTO.builder()
+                                        .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                        .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                        .build())));
     }
-
 }

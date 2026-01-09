@@ -10,25 +10,22 @@ import reactor.core.publisher.Flux;
 
 @AllArgsConstructor
 public class CapacityTechnologyPersistenceAdapter implements CapacityTechnologyPersistencePort {
-    private final CapacityTechnologyRepository capacityTechnologyRepository;
-    private final CapacityTechnologyEntityMapper capacityTechnologyEntityMapper;
+
+    private final CapacityTechnologyRepository repository;
+    private final CapacityTechnologyEntityMapper mapper;
     private final TransactionalOperator transactionalOperator;
 
-
     @Override
-    public Flux<CapacityTechnology> saveAll(Flux<CapacityTechnology> capacityTechnologies) {
+    public Flux<CapacityTechnology> saveAll(Flux<CapacityTechnology> technologies) {
         return transactionalOperator.execute(status ->
-                capacityTechnologies
-                        .map(capacityTechnologyEntityMapper::toEntity)
-                        .as(capacityTechnologyRepository::saveAll)
-        ).map(capacityTechnologyEntityMapper::toModel);
+                technologies
+                        .map(mapper::toEntity)
+                        .as(repository::saveAll)
+        ).map(mapper::toModel);
     }
 
     @Override
     public Flux<Long> findAllIdTechnologyByIdCapacity(Long idCapacity) {
-        return capacityTechnologyRepository
-                .findIdTechnologyByIdCapacity(idCapacity)
-                .switchIfEmpty(Flux.empty());
+        return repository.findIdTechnologyByIdCapacity(idCapacity);
     }
-
 }

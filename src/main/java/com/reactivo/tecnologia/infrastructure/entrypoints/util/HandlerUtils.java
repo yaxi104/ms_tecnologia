@@ -37,6 +37,17 @@ public class HandlerUtils {
     }
 
     public String getMessageId(ServerRequest serverRequest) {
-        return serverRequest.headers().firstHeader(X_MESSAGE_ID);
+        String messageId = serverRequest.headers()
+                .firstHeader(X_MESSAGE_ID);
+
+        if (messageId == null || messageId.isBlank()) {
+            return null;
+        }
+
+        return messageId.trim();
+    }
+
+    public boolean isMessageIdPresent(ServerRequest serverRequest) {
+        return getMessageId(serverRequest) != null;
     }
 }

@@ -1,5 +1,6 @@
 package com.reactivo.tecnologia.domain.usecase;
 
+import com.reactivo.tecnologia.domain.exceptions.BusinessException;
 import com.reactivo.tecnologia.domain.model.CapacityTechnology;
 import com.reactivo.tecnologia.domain.model.TechnologySummary;
 import com.reactivo.tecnologia.domain.spi.CapacityTechnologyPersistencePort;
@@ -14,6 +15,7 @@ import reactor.test.StepVerifier;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -41,14 +43,29 @@ class CapacityTechnologyUseCaseTest {
         CapacityTechnology tech2 = new CapacityTechnology(2L, 101L, 201L);
 
         Flux<CapacityTechnology> input = Flux.just(tech1, tech2);
-        when(capacityTechnologyPersistencePort.saveAll(input)).thenReturn(Flux.just(tech1, tech2));
+
+        when(capacityTechnologyPersistencePort.saveAll(any()))
+                .thenReturn(Flux.just(tech1, tech2));
 
         StepVerifier.create(useCase.saveAllCapacityTechnology(input))
                 .expectNext(tech1)
                 .expectNext(tech2)
                 .verifyComplete();
 
-        verify(capacityTechnologyPersistencePort, times(1)).saveAll(input);
+        verify(capacityTechnologyPersistencePort, times(1))
+                .saveAll(any());
+    }
+
+    @Test
+    void saveAllCapacityTechnologyEmptyFluxTest() {
+
+        Flux<CapacityTechnology> input = Flux.empty();
+
+        StepVerifier.create(useCase.saveAllCapacityTechnology(input))
+                .expectError(BusinessException.class)
+                .verify();
+
+        verifyNoInteractions(capacityTechnologyPersistencePort);
     }
 
     @Test

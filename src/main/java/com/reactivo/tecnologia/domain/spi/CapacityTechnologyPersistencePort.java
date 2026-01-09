@@ -1,5 +1,6 @@
 package com.reactivo.tecnologia.domain.spi;
 
+
 import com.reactivo.tecnologia.domain.model.CapacityTechnology;
 import reactor.core.publisher.Flux;
 
