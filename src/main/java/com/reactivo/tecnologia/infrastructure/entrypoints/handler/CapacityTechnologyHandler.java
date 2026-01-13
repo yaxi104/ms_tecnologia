@@ -137,4 +137,83 @@ public class CapacityTechnologyHandler {
                                         .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
                                         .build())));
     }
+
+    //    public Mono<ServerResponse> getCapacityIdGroupedTechnologies(ServerRequest request) {
+//        String messageId = handlerUtils.getMessageId(request);
+//        if (messageId == null) {
+//            return handlerUtils.buildErrorResponse(
+//                    HttpStatus.BAD_REQUEST,
+//                    null,
+//                    TechnicalMessage.INVALID_PARAMETERS,
+//                    List.of(ErrorDTO.builder()
+//                            .code(TechnicalMessage.INVALID_PARAMETERS.getCode())
+//                            .message("Header X-MESSAGE-ID is required")
+//                            .build()));
+//        }
+//
+//        int page = request.queryParam("page").map(Integer::parseInt).orElse(0);
+//        int size = request.queryParam("size").map(Integer::parseInt).orElse(10);
+//        boolean asc = request.queryParam("asc").map(Boolean::parseBoolean).orElse(true);
+//
+//        return capacityTechnologyUseCase.getCapacidtyIdGroupedTechnologies(page, size, asc)
+//                .collectList()
+//                .flatMap(list ->
+//                        ServerResponse.ok()
+//                                .contentType(MediaType.APPLICATION_JSON)
+//                                .bodyValue(list))
+//                .contextWrite(ctx -> ctx.put(ContextKeys.X_MESSAGE_ID, messageId))
+//                .doOnError(ex ->
+//                        log.error("Error fetching grouped technologies, messageId={}", messageId, ex))
+//                .onErrorResume(ex ->
+//                        handlerUtils.buildErrorResponse(
+//                                HttpStatus.INTERNAL_SERVER_ERROR,
+//                                messageId,
+//                                TechnicalMessage.INTERNAL_ERROR,
+//                                List.of(ErrorDTO.builder()
+//                                        .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+//                                        .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+//                                        .build())));
+//    }
+    public Mono<ServerResponse> getCapacityIdGroupedTechnologies(ServerRequest request) {
+
+        // Obtener X-MESSAGE-ID del header
+        String messageId = handlerUtils.getMessageId(request);
+        if (messageId == null) {
+            return handlerUtils.buildErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    TechnicalMessage.INVALID_PARAMETERS,
+                    List.of(ErrorDTO.builder()
+                            .code(TechnicalMessage.INVALID_PARAMETERS.getCode())
+                            .message("Header X-MESSAGE-ID is required")
+                            .build()));
+        }
+
+        // Leer query params
+        int page = request.queryParam("page").map(Integer::parseInt).orElse(0);
+        int size = request.queryParam("size").map(Integer::parseInt).orElse(10);
+        boolean asc = request.queryParam("asc").map(Boolean::parseBoolean).orElse(true);
+
+        // Llamar al use case que devuelve Mono<Map<Long, List<TechnologySummary>>>
+        return capacityTechnologyUseCase
+                .getCapacidtyIdGroupedTechnologies(page, size, asc)
+                .flatMap(resultMap ->
+                        ServerResponse.ok()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(resultMap)
+                )
+                .contextWrite(ctx -> ctx.put(ContextKeys.X_MESSAGE_ID, messageId))
+                .doOnError(ex ->
+                        log.error("Error fetching grouped technologies, messageId={}", messageId, ex))
+                .onErrorResume(ex ->
+                        handlerUtils.buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                messageId,
+                                TechnicalMessage.INTERNAL_ERROR,
+                                List.of(ErrorDTO.builder()
+                                        .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                        .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                        .build())));
+    }
+
 }

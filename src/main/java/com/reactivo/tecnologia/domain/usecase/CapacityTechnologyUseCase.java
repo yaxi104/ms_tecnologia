@@ -10,7 +10,6 @@ import com.reactivo.tecnologia.domain.spi.TechnologyPersistencePort;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,14 +63,12 @@ public class CapacityTechnologyUseCase implements CapacityTechnologyServicePort 
                         return Mono.just(Map.of());
                     }
 
-                    // Paso 2: Agrupar por idCapacity y obtener la lista de idTechnology de cada capacidad
                     Map<Long, List<Long>> capacityToTechIds = capacityTechnologies.stream()
                             .collect(Collectors.groupingBy(
                                     CapacityTechnology::idCapacity,
                                     Collectors.mapping(CapacityTechnology::idTechnology, Collectors.toList())
                             ));
 
-                    // Paso 3: obtener todos los idTechnology distintos
                     List<Long> allTechnologyIds = capacityToTechIds.values().stream()
                             .flatMap(List::stream)
                             .distinct()
@@ -81,11 +78,9 @@ public class CapacityTechnologyUseCase implements CapacityTechnologyServicePort 
                         return Mono.just(Map.of());
                     }
 
-                    // Paso 4: traer los TechnologySummary de cada idTechnology
                     return technologyPersistencePort.findByIds(allTechnologyIds)
                             .collectList()
                             .map(allTechSummaries -> {
-                                // Paso 5: Construir el mapa final capacityId -> List<TechnologySummary>
                                 Map<Long, List<TechnologySummary>> result = new HashMap<>();
                                 for (Map.Entry<Long, List<Long>> entry : capacityToTechIds.entrySet()) {
                                     Long capacityId = entry.getKey();
@@ -93,7 +88,7 @@ public class CapacityTechnologyUseCase implements CapacityTechnologyServicePort 
 
                                     List<TechnologySummary> techSummaries = allTechSummaries.stream()
                                             .filter(ts -> techIds.contains(ts.id()))
-                                            .collect(Collectors.toList());
+                                            .toList();
 
                                     result.put(capacityId, techSummaries);
                                 }
@@ -101,4 +96,10 @@ public class CapacityTechnologyUseCase implements CapacityTechnologyServicePort 
                             });
                 });
     }
+
+    @Override
+    public Mono<Map<Long, List<TechnologySummary>>> getCapacidtyIdGroupedTechnologies(int page, int size, boolean asc) {
+        return capacityTechnologyPersistencePort.getCapacityIdGroupedTechnologiesAsMap(page, size, asc);
+    }
+
 }

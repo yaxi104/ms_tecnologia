@@ -27,6 +27,8 @@ public class SecurityConfig {
                         .pathMatchers("/tecnologia/**").hasRole(ROLE_ADMIN)
                         .pathMatchers("/tecnologias/**").hasRole(ROLE_ADMIN)
                         .pathMatchers("/capacidad-tecnologia/**").hasRole(ROLE_ADMIN)
+                        .pathMatchers("/capacidad-tecnologias").hasRole(ROLE_ADMIN)
+                        .pathMatchers("/tecnologias/capacidades").hasRole(ROLE_ADMIN)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)

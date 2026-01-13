@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TechnologyDTO {
+    private Long id;
     private String name;
     private String description;
 }
