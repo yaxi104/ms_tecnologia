@@ -42,4 +42,10 @@ public class TechnologyPersistenceAdapter implements TechnologyPersistencePort {
                 .map(technologySummaryEntityMapper::toModel);
     }
 
+    @Override
+    public Mono<Technology> findById(Long id) {
+        return technologyRepository.findById(id)
+                .map(technologyEntityMapper::toModel);
+    }
+
 }

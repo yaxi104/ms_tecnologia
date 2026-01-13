@@ -19,6 +19,7 @@ public class TechnologyRouterRest {
     public RouterFunction<ServerResponse> routerFunction(TechonologyHandlerImpl techonologyHandler) {
         return RouterFunctions
                 .route(POST("/tecnologia").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::createTechnology)
-                .andRoute(GET("/tecnologias").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::getAllTechnologies);
+                .andRoute(GET("/tecnologias").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::getAllTechnologies)
+                .andRoute(POST("/tecnologias/ids").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::getTechnologiesByIds);
     }
 }

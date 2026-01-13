@@ -13,5 +13,4 @@ public interface TechnologyServicePort {
     Flux<Technology> findAll();
 
     Flux<TechnologySummary> findByIds(List<Long> ids);
-
 }

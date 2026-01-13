@@ -4,13 +4,12 @@ import com.reactivo.tecnologia.infrastructure.adapters.security.JwtAuthenticatio
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
-import static com.reactivo.tecnologia.infrastructure.entrypoints.util.Constants.USER_ADMIN;
+import static com.reactivo.tecnologia.infrastructure.entrypoints.util.Constants.ROLE_ADMIN;
 
 @EnableWebFluxSecurity
 @Configuration
@@ -21,15 +20,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/public/**").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/tecnologia").hasRole(USER_ADMIN)
-                        .pathMatchers(HttpMethod.GET, "/tecnologias").hasRole(USER_ADMIN)
-                        .pathMatchers(HttpMethod.POST, "/capacidad-tecnologia").hasRole(USER_ADMIN)
-                        .pathMatchers(HttpMethod.GET, "/capacidad-tecnologias").hasRole(USER_ADMIN)
+                        .pathMatchers("/tecnologia/**").hasRole(ROLE_ADMIN)
+                        .pathMatchers("/tecnologias/**").hasRole(ROLE_ADMIN)
+                        .pathMatchers("/capacidad-tecnologia/**").hasRole(ROLE_ADMIN)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
