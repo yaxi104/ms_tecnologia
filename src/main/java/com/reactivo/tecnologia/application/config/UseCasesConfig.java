@@ -47,5 +47,4 @@ public class UseCasesConfig {
     public CapacityTechnologyServicePort capacityTechnologyServicePort(CapacityTechnologyPersistencePort capacityTechnologyPersistencePort, TechnologyPersistencePort usersPersistencePort) {
         return new CapacityTechnologyUseCase(capacityTechnologyPersistencePort, usersPersistencePort);
     }
-
 }

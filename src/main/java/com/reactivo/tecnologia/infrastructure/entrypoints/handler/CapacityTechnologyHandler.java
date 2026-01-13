@@ -3,6 +3,7 @@ package com.reactivo.tecnologia.infrastructure.entrypoints.handler;
 import com.reactivo.tecnologia.domain.api.CapacityTechnologyServicePort;
 import com.reactivo.tecnologia.domain.enums.TechnicalMessage;
 import com.reactivo.tecnologia.domain.model.CapacityTechnology;
+import com.reactivo.tecnologia.infrastructure.entrypoints.dto.request.CapacityIdsRequest;
 import com.reactivo.tecnologia.infrastructure.entrypoints.dto.request.CapacityTechnologyDTO;
 import com.reactivo.tecnologia.infrastructure.entrypoints.mapper.CapacityTechnologyMapper;
 import com.reactivo.tecnologia.infrastructure.entrypoints.util.ContextKeys;
@@ -17,9 +18,12 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.util.List;
 import java.util.Objects;
+
+import static com.reactivo.tecnologia.infrastructure.entrypoints.util.Constants.X_MESSAGE_ID;
 
 @Component
 @RequiredArgsConstructor
@@ -107,4 +111,31 @@ public class CapacityTechnologyHandler {
                                         .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
                                         .build())));
     }
+
+    public Mono<ServerResponse> getTechnologiesByCapacityIds(ServerRequest request) {
+        String messageId = handlerUtils.getMessageId(request);
+
+        return request.bodyToMono(CapacityIdsRequest.class)
+                .flatMap(req ->
+                        capacityTechnologyUseCase.findTechnologiesByCapacityIds(req.capacityIds())
+                )
+                .flatMap(resultMap ->
+                        ServerResponse.ok()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(resultMap)
+                )
+                .contextWrite(Context.of(X_MESSAGE_ID, messageId))
+                .doOnError(ex ->
+                        log.error("Error fetching technologies by capacity ids, messageId: {}", messageId, ex))
+                .onErrorResume(ex ->
+                        handlerUtils.buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                messageId,
+                                TechnicalMessage.INTERNAL_ERROR,
+                                List.of(ErrorDTO.builder()
+                                        .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                        .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                        .build())));
+    }
+
 }

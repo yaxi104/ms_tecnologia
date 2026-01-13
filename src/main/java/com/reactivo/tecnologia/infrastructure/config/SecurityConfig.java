@@ -21,13 +21,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/public/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/tecnologia").hasRole(USER_ADMIN)
                         .pathMatchers(HttpMethod.GET, "/tecnologias").hasRole(USER_ADMIN)
+                        .pathMatchers(HttpMethod.POST, "/tecnologias/ids").hasRole(USER_ADMIN)
+                        .pathMatchers(HttpMethod.POST, "/tecnologias/capacities").hasRole(USER_ADMIN)
                         .pathMatchers(HttpMethod.POST, "/capacidad-tecnologia").hasRole(USER_ADMIN)
                         .pathMatchers(HttpMethod.GET, "/capacidad-tecnologias").hasRole(USER_ADMIN)
                         .anyExchange().authenticated()

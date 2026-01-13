@@ -4,10 +4,13 @@ import com.reactivo.tecnologia.domain.api.TechnologyServicePort;
 import com.reactivo.tecnologia.domain.enums.TechnicalMessage;
 import com.reactivo.tecnologia.domain.exceptions.BusinessException;
 import com.reactivo.tecnologia.domain.exceptions.TechnicalException;
+import com.reactivo.tecnologia.infrastructure.entrypoints.dto.request.IdsRequest;
 import com.reactivo.tecnologia.infrastructure.entrypoints.dto.request.TechnologyDTO;
 import com.reactivo.tecnologia.infrastructure.entrypoints.dto.response.TechnologyResponse;
+import com.reactivo.tecnologia.infrastructure.entrypoints.dto.response.TechnologySummaryResponse;
 import com.reactivo.tecnologia.infrastructure.entrypoints.mapper.TechnologyMapper;
 import com.reactivo.tecnologia.infrastructure.entrypoints.mapper.TechnologyResponseMapper;
+import com.reactivo.tecnologia.infrastructure.entrypoints.mapper.TechnologySummaryResponseMapper;
 import com.reactivo.tecnologia.infrastructure.entrypoints.util.ErrorDTO;
 import com.reactivo.tecnologia.infrastructure.entrypoints.util.HandlerUtils;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ public class TechonologyHandlerImpl {
     private final TechnologyServicePort technologyServicePort;
     private final TechnologyMapper technologyMapper;
     private final TechnologyResponseMapper technologyResponseMapper;
+    private final TechnologySummaryResponseMapper technologySummaryResponseMapper;
     private final HandlerUtils handlerUtils;
 
     public Mono<ServerResponse> createTechnology(ServerRequest request) {
@@ -103,4 +107,30 @@ public class TechonologyHandlerImpl {
                                 .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
                                 .build())));
     }
+
+    public Mono<ServerResponse> getTechnologiesByIds(ServerRequest request) {
+        String messageId = handlerUtils.getMessageId(request);
+
+        return request.bodyToMono(IdsRequest.class)
+                .flatMapMany(req ->
+                        technologyServicePort.findByIds(req.ids())
+                )
+                .map(technologySummaryResponseMapper::toDto)
+                .as(dtoFlux ->
+                        ServerResponse.ok()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(dtoFlux, TechnologySummaryResponse.class)
+                )
+                .contextWrite(Context.of(X_MESSAGE_ID, messageId))
+                .onErrorResume(ex ->
+                        handlerUtils.buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                messageId,
+                                TechnicalMessage.INTERNAL_ERROR,
+                                List.of(ErrorDTO.builder()
+                                        .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                        .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                        .build())));
+    }
+
 }

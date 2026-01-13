@@ -16,4 +16,6 @@ public interface TechnologyPersistencePort {
 
     Flux<TechnologySummary> findByIds(List<Long> ids);
 
+    Mono<Technology> findById(Long id);
+
 }
