@@ -7,5 +7,6 @@ public class Constants {
     public static final String X_MESSAGE_ID = "x-message-id";
     public static final String USER_ERROR = "Error on User - [ERROR]";
     public static final String ROLE_ADMIN = "ADMIN";
+    public static final String HEADER_REQUIRED = "Header X-MESSAGE-ID is required";
 
 }
