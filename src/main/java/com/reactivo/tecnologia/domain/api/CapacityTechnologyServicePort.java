@@ -14,4 +14,7 @@ public interface CapacityTechnologyServicePort {
     Flux<TechnologySummary> findAllIdTechnologyByIdCapacity(Long idCapacity);
 
     Mono<Map<Long, List<TechnologySummary>>> findTechnologiesByCapacityIds(List<Long> capacityIds);
+
+    Mono<Map<Long, List<TechnologySummary>>> findTechnologiesByCapacityIdsPaged(int page, int size, boolean asc);
+
 }

@@ -138,4 +138,30 @@ public class CapacityTechnologyHandler {
                                         .build())));
     }
 
+    public Mono<ServerResponse> getTechnologiesByCapacityIdsPaged(ServerRequest request) {
+        String messageId = handlerUtils.getMessageId(request);
+
+        int page = Integer.parseInt(request.queryParam("page").orElse("0"));
+        int size = Integer.parseInt(request.queryParam("size").orElse("10"));
+        boolean asc = Boolean.parseBoolean(request.queryParam("asc").orElse("true"));
+
+        return capacityTechnologyUseCase.findTechnologiesByCapacityIdsPaged(page, size, asc)
+                .flatMap(resultMap ->
+                        ServerResponse.ok()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(resultMap)
+                )
+                .contextWrite(Context.of(X_MESSAGE_ID, messageId))
+                .doOnError(ex ->
+                        log.error("Error fetching paged technologies by capacity ids, messageId: {}", messageId, ex))
+                .onErrorResume(ex ->
+                        handlerUtils.buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                messageId,
+                                TechnicalMessage.INTERNAL_ERROR,
+                                List.of(ErrorDTO.builder()
+                                        .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                        .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                        .build())));
+    }
 }

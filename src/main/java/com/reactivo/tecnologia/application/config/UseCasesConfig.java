@@ -16,6 +16,7 @@ import com.reactivo.tecnologia.infrastructure.adapters.persistence.technology.re
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.transaction.reactive.TransactionalOperator;
 
 @Configuration
@@ -27,6 +28,7 @@ public class UseCasesConfig {
     private final CapacityTechnologyRepository capacityTechnologyRepository;
     private final CapacityTechnologyEntityMapper capacityTechnologyEntityMapper;
     private final TransactionalOperator transactionalOperator;
+    private final DatabaseClient databaseClient;
 
     @Bean
     public TechnologyPersistencePort technologyPersistencePort() {
@@ -35,7 +37,7 @@ public class UseCasesConfig {
 
     @Bean
     public CapacityTechnologyPersistencePort capacityTechnologyPersistencePort() {
-        return new CapacityTechnologyPersistenceAdapter(capacityTechnologyRepository, capacityTechnologyEntityMapper, transactionalOperator);
+        return new CapacityTechnologyPersistenceAdapter(capacityTechnologyRepository, capacityTechnologyEntityMapper, transactionalOperator, databaseClient);
     }
 
     @Bean

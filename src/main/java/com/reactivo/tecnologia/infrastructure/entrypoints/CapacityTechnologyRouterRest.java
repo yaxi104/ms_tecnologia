@@ -19,7 +19,8 @@ public class CapacityTechnologyRouterRest {
     public RouterFunction<ServerResponse> routerFunction(CapacityTechnologyHandler capacityTechnologyHandler) {
         return RouterFunctions
                 .route(POST("/capacidad-tecnologia").and(accept(MediaType.APPLICATION_JSON)), capacityTechnologyHandler::saveAllCapacityTechnology)
-                .andRoute(GET("/capacidad-tecnologias").and(accept(MediaType.APPLICATION_JSON)), capacityTechnologyHandler::findAllIdTechnologyByIdCapacity)
-                .andRoute(POST("/tecnologias/capacities").and(accept(MediaType.APPLICATION_JSON)), capacityTechnologyHandler::getTechnologiesByCapacityIds);
+                .andRoute(GET("/capacidad-tecnologia/{idCapacidad}").and(accept(MediaType.APPLICATION_JSON)), capacityTechnologyHandler::findAllIdTechnologyByIdCapacity)
+                .andRoute(POST("/tecnologias/capacidades").and(accept(MediaType.APPLICATION_JSON)), capacityTechnologyHandler::getTechnologiesByCapacityIds)
+                .andRoute(POST("/tecnologias/capacidades/paginado").and(accept(MediaType.APPLICATION_JSON)), capacityTechnologyHandler::getTechnologiesByCapacityIdsPaged);
     }
 }
