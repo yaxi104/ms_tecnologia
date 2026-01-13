@@ -140,8 +140,6 @@ public class CapacityTechnologyHandler {
     }
 
     public Mono<ServerResponse> getCapacityIdGroupedTechnologies(ServerRequest request) {
-
-        // Obtener X-MESSAGE-ID del header
         String messageId = handlerUtils.getMessageId(request);
         if (messageId == null) {
             return handlerUtils.buildErrorResponse(
@@ -154,12 +152,10 @@ public class CapacityTechnologyHandler {
                             .build()));
         }
 
-        // Leer query params
         int page = request.queryParam("page").map(Integer::parseInt).orElse(0);
         int size = request.queryParam("size").map(Integer::parseInt).orElse(10);
         boolean asc = request.queryParam("asc").map(Boolean::parseBoolean).orElse(true);
 
-        // Llamar al use case que devuelve Mono<Map<Long, List<TechnologySummary>>>
         return capacityTechnologyUseCase
                 .getCapacidtyIdGroupedTechnologies(page, size, asc)
                 .flatMap(resultMap ->
