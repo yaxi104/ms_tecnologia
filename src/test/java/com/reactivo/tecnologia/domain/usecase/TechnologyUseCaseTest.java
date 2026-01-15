@@ -20,6 +20,7 @@ import reactor.test.StepVerifier;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.lenient;
@@ -122,8 +123,8 @@ class TechnologyUseCaseTest {
 
     @Test
     void findAllReturnsTechnologiesTest() {
-        Technology tech1 = new Technology(1L, "Spring WebFlux", "Reactive framework");
-        Technology tech2 = new Technology(2L, "React", "Frontend library");
+        Technology tech1 = new Technology(1L, "Spring", "Framework");
+        Technology tech2 = new Technology(2L, "React", "Frontend");
 
         when(technologyPersistencePort.findAll())
                 .thenReturn(Flux.just(tech1, tech2));
@@ -149,7 +150,7 @@ class TechnologyUseCaseTest {
 
     @Test
     void findByIdsReturnsSummariesTest() {
-        TechnologySummary summary1 = new TechnologySummary(1L, "Spring WebFlux");
+        TechnologySummary summary1 = new TechnologySummary(1L, "Spring");
         TechnologySummary summary2 = new TechnologySummary(2L, "React");
 
         List<Long> ids = List.of(1L, 2L);
@@ -167,7 +168,7 @@ class TechnologyUseCaseTest {
 
     @Test
     void findByIdsEmptyTest() {
-        List<Long> ids = List.of(10L, 20L);
+        List<Long> ids = List.of(99L);
 
         when(technologyPersistencePort.findByIds(ids))
                 .thenReturn(Flux.empty());
@@ -176,5 +177,113 @@ class TechnologyUseCaseTest {
                 .verifyComplete();
 
         verify(technologyPersistencePort).findByIds(ids);
+    }
+
+    @Test
+    void deleteTechnologiesByCapacitiesSuccessTest() {
+        List<Long> capacityIds = List.of(1L, 2L);
+
+        when(technologyPersistencePort.deleteCapacityTechnologyRelations(capacityIds))
+                .thenReturn(Mono.empty());
+
+        when(technologyPersistencePort.findOrphanedTechnologies(capacityIds))
+                .thenReturn(Flux.just(10L, 20L));
+
+        when(technologyPersistencePort.deleteTechnology(10L))
+                .thenReturn(Mono.empty());
+
+        when(technologyPersistencePort.deleteTechnology(20L))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(
+                        technologyUseCase.deleteTechnologiesByCapacities(capacityIds)
+                )
+                .verifyComplete();
+
+        verify(technologyPersistencePort)
+                .deleteCapacityTechnologyRelations(capacityIds);
+        verify(technologyPersistencePort)
+                .findOrphanedTechnologies(capacityIds);
+        verify(technologyPersistencePort)
+                .deleteTechnology(10L);
+        verify(technologyPersistencePort)
+                .deleteTechnology(20L);
+    }
+
+    @Test
+    void deleteTechnologiesByCapacitiesWithoutOrphansTest() {
+        List<Long> capacityIds = List.of(3L);
+
+        when(technologyPersistencePort.deleteCapacityTechnologyRelations(capacityIds))
+                .thenReturn(Mono.empty());
+
+        when(technologyPersistencePort.findOrphanedTechnologies(capacityIds))
+                .thenReturn(Flux.empty());
+
+        StepVerifier.create(
+                        technologyUseCase.deleteTechnologiesByCapacities(capacityIds)
+                )
+                .verifyComplete();
+
+        verify(technologyPersistencePort)
+                .deleteCapacityTechnologyRelations(capacityIds);
+        verify(technologyPersistencePort)
+                .findOrphanedTechnologies(capacityIds);
+        verify(technologyPersistencePort, never())
+                .deleteTechnology(any());
+    }
+
+    @Test
+    void deleteTechnologiesByCapacitiesFailsOnDeleteRelationsTest() {
+        List<Long> capacityIds = List.of(1L);
+        RuntimeException error = new RuntimeException("DB error");
+
+        when(technologyPersistencePort.deleteCapacityTechnologyRelations(capacityIds))
+                .thenReturn(Mono.error(error));
+
+        when(technologyPersistencePort.findOrphanedTechnologies(any()))
+                .thenReturn(Flux.empty());
+
+        StepVerifier.create(
+                        technologyUseCase.deleteTechnologiesByCapacities(capacityIds)
+                )
+                .expectErrorMatches(ex -> ex.equals(error))
+                .verify();
+
+        verify(technologyPersistencePort)
+                .deleteCapacityTechnologyRelations(capacityIds);
+
+        verify(technologyPersistencePort)
+                .findOrphanedTechnologies(capacityIds);
+
+        verify(technologyPersistencePort, never())
+                .deleteTechnology(anyLong());
+    }
+
+    @Test
+    void deleteTechnologiesByCapacitiesFailsOnDeleteTechnologyTest() {
+        List<Long> capacityIds = List.of(1L);
+
+        when(technologyPersistencePort.deleteCapacityTechnologyRelations(capacityIds))
+                .thenReturn(Mono.empty());
+
+        when(technologyPersistencePort.findOrphanedTechnologies(capacityIds))
+                .thenReturn(Flux.just(10L));
+
+        when(technologyPersistencePort.deleteTechnology(10L))
+                .thenReturn(Mono.error(new RuntimeException("Delete error")));
+
+        StepVerifier.create(
+                        technologyUseCase.deleteTechnologiesByCapacities(capacityIds)
+                )
+                .expectError()
+                .verify();
+
+        verify(technologyPersistencePort)
+                .deleteCapacityTechnologyRelations(capacityIds);
+        verify(technologyPersistencePort)
+                .findOrphanedTechnologies(capacityIds);
+        verify(technologyPersistencePort)
+                .deleteTechnology(10L);
     }
 }
