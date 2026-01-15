@@ -18,4 +18,10 @@ public interface TechnologyPersistencePort {
 
     Mono<Technology> findById(Long id);
 
+    Flux<Long> findOrphanedTechnologies(List<Long> capacityIds);
+
+    Mono<Void> deleteTechnology(Long technologyId);
+
+    Mono<Void> deleteCapacityTechnologyRelations(List<Long> capacityIds);
+
 }

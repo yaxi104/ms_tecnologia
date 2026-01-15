@@ -7,6 +7,8 @@ import com.reactivo.tecnologia.infrastructure.adapters.persistence.technology.ma
 import com.reactivo.tecnologia.infrastructure.adapters.persistence.technology.mapper.TechnologySummaryEntityMapper;
 import com.reactivo.tecnologia.infrastructure.adapters.persistence.technology.repository.TechnologyRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -17,7 +19,7 @@ public class TechnologyPersistenceAdapter implements TechnologyPersistencePort {
     private final TechnologyRepository technologyRepository;
     private final TechnologyEntityMapper technologyEntityMapper;
     private final TechnologySummaryEntityMapper technologySummaryEntityMapper;
-
+    private final DatabaseClient databaseClient;
 
     @Override
     public Mono<Technology> save(Technology technology) {
@@ -46,6 +48,33 @@ public class TechnologyPersistenceAdapter implements TechnologyPersistencePort {
     public Mono<Technology> findById(Long id) {
         return technologyRepository.findById(id)
                 .map(technologyEntityMapper::toModel);
+    }
+
+    @Override
+    public Flux<Long> findOrphanedTechnologies(List<Long> capacityIds) {
+        return databaseClient.sql("""
+                        SELECT t.id
+                        FROM technology t
+                        LEFT JOIN capacity_technology ct ON t.id = ct.id_technology
+                        GROUP BY t.id
+                        HAVING COUNT(ct.id_capacity) = 0
+                        """)
+                .map(row -> row.get("id", Long.class))
+                .all();
+    }
+
+    @Override
+    @Transactional
+    public Mono<Void> deleteTechnology(Long technologyId) {
+        return technologyRepository.deleteById(technologyId);
+    }
+
+    @Override
+    @Transactional
+    public Mono<Void> deleteCapacityTechnologyRelations(List<Long> capacityIds) {
+        return databaseClient.sql("DELETE FROM capacity_technology WHERE id_capacity IN (:ids)")
+                .bind("ids", capacityIds)
+                .then();
     }
 
 }

@@ -20,6 +20,7 @@ public class TechnologyRouterRest {
         return RouterFunctions
                 .route(POST("/tecnologia").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::createTechnology)
                 .andRoute(GET("/tecnologias").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::getAllTechnologies)
-                .andRoute(POST("/tecnologias/ids").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::getTechnologiesByIds);
+                .andRoute(POST("/tecnologias/ids").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::getTechnologiesByIds)
+                .andRoute(POST("/tecnologias/eliminar-por-capacidades").and(accept(MediaType.APPLICATION_JSON)), techonologyHandler::deleteTechnologiesByCapacities);
     }
 }

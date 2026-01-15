@@ -43,4 +43,13 @@ public class TechnologyUseCase implements TechnologyServicePort {
         return technologyPersistencePort.findByIds(ids);
     }
 
+    @Override
+    public Mono<Void> deleteTechnologiesByCapacities(List<Long> capacityIds) {
+        Mono<Void> deleteRelations = technologyPersistencePort.deleteCapacityTechnologyRelations(capacityIds);
+        Mono<Void> deleteOrphanTechnologies = technologyPersistencePort.findOrphanedTechnologies(capacityIds)
+                .flatMap(technologyPersistencePort::deleteTechnology)
+                .then();
+
+        return deleteRelations.then(deleteOrphanTechnologies);
+    }
 }

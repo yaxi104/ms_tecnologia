@@ -133,4 +133,48 @@ public class TechonologyHandlerImpl {
                                         .build())));
     }
 
+    public Mono<ServerResponse> deleteTechnologiesByCapacities(ServerRequest request) {
+        String messageId = handlerUtils.getMessageId(request);
+
+        return request.bodyToMono(IdsRequest.class)
+                .flatMap(idsRequest ->
+                        technologyServicePort.deleteTechnologiesByCapacities(idsRequest.ids())
+                )
+                .then(ServerResponse.noContent().build())
+                .contextWrite(Context.of(X_MESSAGE_ID, messageId))
+                .doOnSuccess(v ->
+                        log.info("Technologies and capacity-technology relations deleted successfully. messageId={}", messageId))
+                .onErrorResume(BusinessException.class, ex ->
+                        handlerUtils.buildErrorResponse(
+                                HttpStatus.BAD_REQUEST,
+                                messageId,
+                                TechnicalMessage.INVALID_PARAMETERS,
+                                List.of(ErrorDTO.builder()
+                                        .code(ex.getTechnicalMessage().getCode())
+                                        .message(ex.getTechnicalMessage().getMessage())
+                                        .param(ex.getTechnicalMessage().getParam())
+                                        .build())))
+                .onErrorResume(TechnicalException.class, ex ->
+                        handlerUtils.buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                messageId,
+                                TechnicalMessage.INTERNAL_ERROR,
+                                List.of(ErrorDTO.builder()
+                                        .code(ex.getTechnicalMessage().getCode())
+                                        .message(ex.getTechnicalMessage().getMessage())
+                                        .param(ex.getTechnicalMessage().getParam())
+                                        .build())))
+                .onErrorResume(ex -> {
+                    log.error("Unexpected error occurred for messageId: {}", messageId, ex);
+                    return handlerUtils.buildErrorResponse(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            messageId,
+                            TechnicalMessage.INTERNAL_ERROR,
+                            List.of(ErrorDTO.builder()
+                                    .code(TechnicalMessage.INTERNAL_ERROR.getCode())
+                                    .message(TechnicalMessage.INTERNAL_ERROR.getMessage())
+                                    .build()));
+                });
+    }
+
 }

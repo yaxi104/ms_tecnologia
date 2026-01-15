@@ -32,7 +32,7 @@ public class UseCasesConfig {
 
     @Bean
     public TechnologyPersistencePort technologyPersistencePort() {
-        return new TechnologyPersistenceAdapter(technologyRepository, technologyEntityMapper, technologySummaryEntityMapper);
+        return new TechnologyPersistenceAdapter(technologyRepository, technologyEntityMapper, technologySummaryEntityMapper, databaseClient);
     }
 
     @Bean

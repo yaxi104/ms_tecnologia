@@ -13,4 +13,6 @@ public interface TechnologyServicePort {
     Flux<Technology> findAll();
 
     Flux<TechnologySummary> findByIds(List<Long> ids);
+
+    Mono<Void> deleteTechnologiesByCapacities(List<Long> capacityIds);
 }
